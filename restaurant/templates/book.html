@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section>
+  <article>
+    <!-- Add your code in the line below  -->
+    <h1>Make a reservation</h1>
+
+    <!--Begin row-->
+    <div class="row">
+      <!--Begin col-->
+      <div class="column">
+        <form action="" method="post">
+          {% csrf_token %}
+          <p>
+            <label for="id_first_name">First name:</label>
+            <input type="text" name="first_name" maxlength="200" required id="id_first_name">
+          </p>
+          <p>
+            <label for="reservation_date">Reservation date:</label>
+            <input type="date" name="reservation_date" required id="reservation_date">
+          </p>
+          <p>
+            <label for="id_reservation_slot">Reservation time:</label>
+            <select name="reservation_slot" required id="id_reservation_slot">
+              <option value="" disabled selected>Select time</option>
+            </select>
+          </p>
+          <input type="submit" id="button">
+        </form>
+        <div id="bookings"></div>
+      </div>
+      <!--End col-->
+
+      <!--Begin col-->
+      <div class="column">
+        <div class="videowrap">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11898.289517452584!2d-87.60853049433447!3d41.79442860243028!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x880e2912ce6f7027%3A0xc0cfb5545d4a37b2!2sHyde%20Park%2C%20Chicago%2C%20IL%2C%20USA!5e0!3m2!1sen!2spt!4v1662384760663!5m2!1sen!2spt"
+            width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+      <!--End col-->
+    </div>
+    <!--End row-->
+
+
+
+
+  </article>
+</section>
+<!-- Add your code inside the script tags below  -->
+<script>
+  console.log("Hello");
+  document.addEventListener("DOMContentLoaded", () => {
+    const dateInput   = document.getElementById("reservation_date");
+    const slotSelect  = document.getElementById("id_reservation_slot");
+    const bookingsDiv = document.getElementById("bookings");
+
+    const fmt = h => `${h}:00`;
+
+    function fillBaseSlots() {
+      slotSelect.innerHTML = Array.from({ length: 9 }, (_, i) => {
+        const hour = i + 11;          // 11 .. 19
+        return `<option value="${hour}">${fmt(hour)}</option>`;
+      }).join("");
+    }
+    fillBaseSlots();
+
+    dateInput.addEventListener("change", loadSlots);
+
+    if (dateInput.value) loadSlots(); 
+
+    async function loadSlots() {
+      const date = dateInput.value;
+      if (!date) return;
+
+      try {
+        const r = await fetch(`/bookings/?date=${date}`); 
+        if (!r.ok) throw new Error(`Server ${r.status}`);
+        const arr = await r.json();                      
+
+        bookingsDiv.innerHTML = arr.length ? "" : "No bookings yet.";
+        const reserved = [];
+        arr.forEach(o => {
+          const f = o.fields;
+          reserved.push(+f.reservation_slot);            
+          bookingsDiv.insertAdjacentHTML(
+            "beforeend",
+            `<p>${f.first_name} – ${fmt(f.reservation_slot)}</p>`
+          );
+        });
+
+        let opts = '<option value="" disabled selected>Select time</option>';
+        for (let h = 11; h < 20; h++) {
+          opts += reserved.includes(h)
+            ? `<option value="${h}" disabled>${fmt(h)} (reserved)</option>`
+            : `<option value="${h}">${fmt(h)}</option>`;
+        }
+        slotSelect.innerHTML = opts;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  });
+  </script>
+{% endblock %}
+
