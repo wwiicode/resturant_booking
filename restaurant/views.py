@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from restaurant.forms import BookingForm
+from restaurant.serializers import BookingSerializer
 
 from .models import Menu
 from django.core import serializers
@@ -31,16 +32,18 @@ def book(request):
 @csrf_exempt
 def bookings(request):
     if request.method == 'POST':
-        data = json.load(request)
-        exist = Booking.objects.filter(reservation_date=data['reservation_date']).filter(
-            reservation_slot=data['reservation_slot']).exists()
-        if exist==False:
-            booking = Booking(
-                first_name=data['first_name'],
-                reservation_date=data['reservation_date'],
-                reservation_slot=data['reservation_slot'],
-            )
-            booking.save()
+        serializer = BookingSerializer(data=request.data)
+        if serializer.is_valid():
+            data = json.load(request)
+            exist = Booking.objects.filter(reservation_date=data['reservation_date']).filter(
+                reservation_slot=data['reservation_slot']).exists()
+            if exist==False:
+                booking = Booking(
+                    first_name=data['first_name'],
+                    reservation_date=data['reservation_date'],
+                    reservation_slot=data['reservation_slot'],
+                )
+                booking.save()
         else:
             return HttpResponse("{'error':1}", content_type='application/json')
     
