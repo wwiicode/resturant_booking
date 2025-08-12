@@ -13,7 +13,7 @@ SELECT user, host FROM mysql.user;
 
 # test the booking funciton
 run `python manage.py runserver` to spin up the Django app
-hover over to booking to test functionality of the /book/ API
+hover over to /booking or use Insonia REST to test functionality of the /book/ API
 
 
 
